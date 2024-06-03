@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gym-gridroboman"
+version = "0.1.0"
+description = "An implementation of the \"gridroboman\" environment from the paper \"Retrieval Augmented Reinforcement Learning\"."
+authors = ["Ben Giacalone <bensgiacalone@gmail.com>"]
+readme = "README.md"
+packages = [{include = "gridroboman"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+mypy = "^1.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
