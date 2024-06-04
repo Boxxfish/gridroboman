@@ -7,6 +7,7 @@ import random
 import numpy as np
 
 GRID_SIZE = 7
+MAX_TIME = 50
 
 
 @dataclass
@@ -25,6 +26,7 @@ class BaseGridrobomanEnv(gym.Env):
         self.agent_pos: Tuple[int, int] = (0, 0)
         self.objs = [ObjData(0, 0, None, None) for _ in range(3)]
         self.lifted_obj_idx: Optional[int] = None
+        self.timer = 0
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         assert self.action_space.contains(action)
@@ -57,7 +59,10 @@ class BaseGridrobomanEnv(gym.Env):
         if self.lifted_obj_idx is not None:
             (self.objs[self.lifted_obj_idx].x, self.objs[self.lifted_obj_idx].y) = self.agent_pos
 
-        return self._gen_obs(), 0.0, False, False, self._gen_info()
+        self.timer += 1
+        trunc = self.timer == MAX_TIME
+
+        return self._gen_obs(), 0.0, False, trunc, self._gen_info()
 
     def reset(
         self, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None
