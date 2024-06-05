@@ -8,6 +8,14 @@ import numpy as np
 
 GRID_SIZE = 7
 MAX_TIME = 50
+CENTER = [(x, y) for x in range(2, 5) for y in range(2, 5)]
+CORNERS = [
+    (sx + x, sy + y)
+    for x in range(0, 2)
+    for y in range(0, 2)
+    for sx in [0, 5]
+    for sy in [0, 5]
+]
 
 
 @dataclass
@@ -19,8 +27,13 @@ class ObjData:
 
 
 class BaseGridrobomanEnv(gym.Env):
+    """
+    Base class for Gridroboman tasks.
+    """
 
-    def __init__(self, render_mode: str):
+    def __init__(self, x_obj: int, y_obj: int, render_mode: Optional[str] = None):
+        self.x_obj = x_obj
+        self.y_obj = y_obj
         self.action_space = gym.spaces.Discrete(7)
         self.render_mode = render_mode
         self.agent_pos: Tuple[int, int] = (0, 0)
@@ -46,7 +59,7 @@ class BaseGridrobomanEnv(gym.Env):
                 min(GRID_SIZE - 1, self.agent_pos[0] + 1),
                 self.agent_pos[1],
             )
-        
+
         # Pick up
         if action == 5:
             if self._top_obj_idx(self.agent_pos) is not None:
@@ -57,12 +70,19 @@ class BaseGridrobomanEnv(gym.Env):
                 self._place_obj(self.agent_pos)
 
         if self.lifted_obj_idx is not None:
-            (self.objs[self.lifted_obj_idx].x, self.objs[self.lifted_obj_idx].y) = self.agent_pos
+            (self.objs[self.lifted_obj_idx].x, self.objs[self.lifted_obj_idx].y) = (
+                self.agent_pos
+            )
+
+        done = self._goal_fn()
+        reward = 0.0
+        if done:
+            reward = 1.0
 
         self.timer += 1
         trunc = self.timer == MAX_TIME
 
-        return self._gen_obs(), 0.0, False, trunc, self._gen_info()
+        return self._gen_obs(), reward, False, trunc, self._gen_info()
 
     def reset(
         self, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None
@@ -98,7 +118,7 @@ class BaseGridrobomanEnv(gym.Env):
                 status = 1
             obs[2 + i * 3 + 2] = status
         return obs
-    
+
     def _gen_info(self) -> dict[str, np.ndarray]:
         mask = np.zeros([7], dtype=np.int8)
         mask[1] = self.agent_pos[1] == 0
@@ -107,9 +127,7 @@ class BaseGridrobomanEnv(gym.Env):
         mask[4] = self.agent_pos[0] == GRID_SIZE - 1
         mask[5] = self._top_obj_idx(self.agent_pos) is None
         mask[6] = self.lifted_obj_idx is None
-        return {
-            "action_mask": mask
-        }
+        return {"action_mask": mask}
 
     def _top_obj_idx(self, pos: Tuple[int, int]) -> Optional[int]:
         """
@@ -147,6 +165,20 @@ class BaseGridrobomanEnv(gym.Env):
             self.objs[new_top_obj_idx].obj_above = None
         self.lifted_obj_idx = top_obj_idx
 
+    def _adj_to_obj(self, obj_idx: int, pos: Tuple[int, int]) -> bool:
+        """
+        Returns True if the position is immediately adjacent to the object.
+        """
+        obj = self.objs[obj_idx]
+        dist = abs(obj.x - pos[0]) + abs(obj.y - pos[1])
+        return dist == 1
+
+    def _goal_fn(self) -> bool:
+        """
+        Returns True when the goal has been reached.
+        """
+        raise NotImplementedError("This method must be overrided.")
+
     def render(self):
         for y in range(GRID_SIZE):
             for x in range(GRID_SIZE):
@@ -160,15 +192,106 @@ class BaseGridrobomanEnv(gym.Env):
             print("")
 
 
+class LiftXEnv(BaseGridrobomanEnv):
+    """
+    The agent must lift the correct object.
+    """
+
+    def _goal_fn(self) -> bool:
+        return self.lifted_obj_idx == self.x_obj
+
+
+class TouchXEnv(BaseGridrobomanEnv):
+    """
+    The agent must be directly adjecent to the correct object.
+    """
+
+    def _goal_fn(self) -> bool:
+        return self.lifted_obj_idx is None and self._adj_to_obj(
+            self.x_obj, self.agent_pos
+        )
+
+
+class MoveXToCenterEnv(BaseGridrobomanEnv):
+    """
+    The agent must place the correct object in the center.
+    """
+
+    def _goal_fn(self) -> bool:
+        obj = self.objs[self.x_obj]
+        return self.lifted_obj_idx is None and (obj.x, obj.y) in CENTER
+
+
+class MoveXToCornerEnv(BaseGridrobomanEnv):
+    """
+    The agent must place the correct object in any of the corners.
+    """
+
+    def _goal_fn(self) -> bool:
+        obj = self.objs[self.x_obj]
+        return self.lifted_obj_idx is None and (obj.x, obj.y) in CORNERS
+
+
+class TouchXWithYEnv(BaseGridrobomanEnv):
+    """
+    The agent must be directly adjacent to object X while holding object Y.
+    """
+
+    def _goal_fn(self) -> bool:
+        return self.lifted_obj_idx is self.y_obj and self._adj_to_obj(
+            self.x_obj, self.agent_pos
+        )
+
+
+class MoveXCloseToYEnv(BaseGridrobomanEnv):
+    """
+    The agent must place objects X and Y next to each other, such that the distance between both objects in the X and Y
+    directions do not exceed 1.
+    """
+
+    def _goal_fn(self) -> bool:
+        x_obj = self.objs[self.x_obj]
+        y_obj = self.objs[self.y_obj]
+        x_dist = abs(x_obj.x - y_obj.x)
+        y_dist = abs(x_obj.y - y_obj.y)
+        return self.lifted_obj_idx is None and x_dist <= 1 and y_dist <= 1
+
+
+class MoveXFarFromYEnv(BaseGridrobomanEnv):
+    """
+    The agent must place objects X and Y away from each other, such that the Manhattan distance between the objects are
+    greater than 9.
+    """
+
+    def _goal_fn(self) -> bool:
+        x_obj = self.objs[self.x_obj]
+        y_obj = self.objs[self.y_obj]
+        x_dist = abs(x_obj.x - y_obj.x)
+        y_dist = abs(x_obj.y - y_obj.y)
+        return self.lifted_obj_idx is None and x_dist + y_dist > 9
+
+
+class StackXOnYEnv(BaseGridrobomanEnv):
+    """
+    The agent must place object X on top of object Y.
+    """
+
+    def _goal_fn(self) -> bool:
+        return self.objs[self.x_obj].obj_below == self.y_obj
+
+
 if __name__ == "__main__":
     import time
 
-    env = BaseGridrobomanEnv(render_mode="human")
+    env = LiftXEnv(x_obj=0, y_obj=0, render_mode="human")
     obs_, info = env.reset()
     action_space = env.action_space
     for _ in range(100):
         action = action_space.sample(1 - info["action_mask"])
-        obs_, rew_, done_, trunc_, info = env.step(action)
+        obs_, rew_, done, trunc, info = env.step(action)
         os.system("clear")
         env.render()
         time.sleep(0.1)
+
+        if done or trunc:
+            obs_, info = env.reset()
