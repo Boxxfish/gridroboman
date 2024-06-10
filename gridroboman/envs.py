@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import *
 import gymnasium as gym
-import os
 import random
 
 import numpy as np
@@ -278,20 +277,3 @@ class StackXOnYEnv(BaseGridrobomanEnv):
 
     def _goal_fn(self) -> bool:
         return self.objs[self.x_obj].obj_below == self.y_obj
-
-
-if __name__ == "__main__":
-    import time
-
-    env = LiftXEnv(x_obj=0, y_obj=0, render_mode="human")
-    obs_, info = env.reset()
-    action_space = env.action_space
-    for _ in range(100):
-        action = action_space.sample(1 - info["action_mask"])
-        obs_, rew_, done, trunc, info = env.step(action)
-        os.system("clear")
-        env.render()
-        time.sleep(0.1)
-
-        if done or trunc:
-            obs_, info = env.reset()
