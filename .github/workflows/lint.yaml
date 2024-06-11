@@ -17,8 +17,8 @@ jobs:
         run: pip install mypy
       - name: Install Poetry and package
         run: |
-        curl -sSL https://install.python-poetry.org | python3 -
-        poetry install
+          curl -sSL https://install.python-poetry.org | python3 - \
+          poetry install \
       - name: Run mypy
         uses: sasanquaneuf/mypy-github-action@releases/v1
         with:
