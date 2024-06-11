@@ -30,9 +30,28 @@ class BaseGridrobomanEnv(gym.Env):
     Base class for Gridroboman tasks.
     """
 
-    def __init__(self, x_obj: int, y_obj: int, render_mode: Optional[str] = None):
-        self.x_obj = x_obj
-        self.y_obj = y_obj
+    def __init__(
+        self,
+        x_obj: Union[int, str] = -1,
+        y_obj: Union[int, str] = -1,
+        render_mode: Optional[str] = None,
+    ):
+        color_map = {
+            "red": 0,
+            "green": 1,
+            "blue": 2,
+        }
+        if isinstance(x_obj, str):
+            self.x_obj = color_map[x_obj]
+        else:
+            self.x_obj = x_obj
+        if isinstance(y_obj, str):
+            self.y_obj = color_map[y_obj]
+        else:
+            self.y_obj = y_obj
+        assert self.x_obj in [0, 1, 2], "X object is not in [0, 1, 2]"
+        assert self.x_obj != self.y_obj, "X object and Y object must be different"
+
         self.action_space = gym.spaces.Discrete(7)
         self.render_mode = render_mode
         self.agent_pos: Tuple[int, int] = (0, 0)
@@ -237,6 +256,7 @@ class TouchXWithYEnv(BaseGridrobomanEnv):
     """
 
     def _goal_fn(self) -> bool:
+        assert self.y_obj in [0, 1, 2], "Y object is not in [0, 1, 2]"
         return self.lifted_obj_idx is self.y_obj and self._adj_to_obj(
             self.x_obj, self.agent_pos
         )
@@ -249,6 +269,7 @@ class MoveXCloseToYEnv(BaseGridrobomanEnv):
     """
 
     def _goal_fn(self) -> bool:
+        assert self.y_obj in [0, 1, 2], "Y object is not in [0, 1, 2]"
         x_obj = self.objs[self.x_obj]
         y_obj = self.objs[self.y_obj]
         x_dist = abs(x_obj.x - y_obj.x)
@@ -263,6 +284,7 @@ class MoveXFarFromYEnv(BaseGridrobomanEnv):
     """
 
     def _goal_fn(self) -> bool:
+        assert self.y_obj in [0, 1, 2], "Y object is not in [0, 1, 2]"
         x_obj = self.objs[self.x_obj]
         y_obj = self.objs[self.y_obj]
         x_dist = abs(x_obj.x - y_obj.x)
@@ -276,4 +298,5 @@ class StackXOnYEnv(BaseGridrobomanEnv):
     """
 
     def _goal_fn(self) -> bool:
+        assert self.y_obj in [0, 1, 2], "Y object is not in [0, 1, 2]"
         return self.objs[self.x_obj].obj_below == self.y_obj
