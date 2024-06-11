@@ -18,8 +18,10 @@ After 50 timesteps, environments are truncated.
 If you'd like to manually test these environments, you can use the following command:
 
 ```bash
-python -m gridroboman.play_env --name "Gridroboman-TASKNAME-v0" # Replace TASKNAME with the task, e.g. LiftRed 
+python -m gridroboman.play_env --name "Gridroboman-TASKNAME-v0" # Replace TASKNAME with the task, e.g. LiftRed
 ```
+
+To move the agent, use the arrow keys. Lifting and putting down objects can be done with the "L" and "P" keys, respectively.
 
 ### Observation Space
 
