@@ -1,4 +1,4 @@
-## gridroboman
+## Gridroboman
 
 ![main image](./figures/main.gif)
 
@@ -12,6 +12,14 @@ The agent can move up, down, left, and right, and also lift and put down objects
 Objects can also be stacked on top of each other by putting down an object on the same tile as another object. If an agent performs the _lift_ action on a tile shared by multiple objects, the object on top will be lifted.
 
 After 50 timesteps, environments are truncated.
+
+### Testing Environments
+
+If you'd like to manually test these environments, you can use the following command:
+
+```bash
+python -m gridroboman.play_env --name "Gridroboman-TASKNAME-v0" # Replace TASKNAME with the task, e.g. LiftRed 
+```
 
 ### Observation Space
 
@@ -51,16 +59,16 @@ Each environment's `info` dict consists of `action_mask`, a binary `ndarray` whe
 
 If you use gymnasium's `make` function, replace `X` and `Y` with "Red", "Green", or "Blue".
 
-| Image | `make` name | Class Name | Description |
-| -- | -- | -- | -- |
-| ![LiftX](./figures/liftx.gif)                 | `Gridroboman-LiftX-v0`         | `LiftXEnv`                     | The agent must lift the correct object.|
-| ![TouchX](./figures/touchx.gif)               | `Gridroboman-TouchX-v0`        | `TouchXEnv`                    | The agent must be directly adjecent to the correct object.|
-| ![MoveXToCenter](./figures/movextocenter.gif) | `Gridroboman-MoveXToCenter-v0` | `MoveXToCenterEnv`             | The agent must place the correct object in the center (3x3 area in the center of the grid).|
-| ![MoveXToCorner](./figures/movextocorner.gif) | `Gridroboman-MoveXToCorner-v0` | `MoveXToCornerEnv`             | The agent must place the correct object in any of the corners (any of the 4 2x2 in the corners).|
-| ![TouchXWithY](./figures/touchxwithy.gif)     | `Gridroboman-TouchXWithY-v0`   | `TouchXWithYEnv`               | The agent must be directly adjacent to object X while holding object Y.|
-| ![MoveXCloseToY](./figures/movexclosetoy.gif) | `Gridroboman-MoveXCloseToY-v0` | `MoveXCloseToYEnv`             | The agent must place objects X and Y next to each other, such that the distance between both objects in the X and Y directions do not exceed 1. |
-| ![MoveXFarFromY](./figures/movexfarfromy.gif) |                                | `Gridroboman-MoveXFarFromY-v0` | `MoveXFarFromYEnv`| The agent must place objects X and Y away from each other, such that the Manhattan distance between the objects are greater than 9. |
-| ![StackXOnY](./figures/stackxony.gif)          | `Gridroboman-StackXOnY-v0`     | `StackXOnYEnv`                 | The agent must place object X on top of object Y.|
+| Image                                         | `make` name                    | Class Name         | Description                                                                                                                                     |
+| --------------------------------------------- | ------------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![LiftX](./figures/liftx.gif)                 | `Gridroboman-LiftX-v0`         | `LiftXEnv`         | The agent must lift the correct object.                                                                                                         |
+| ![TouchX](./figures/touchx.gif)               | `Gridroboman-TouchX-v0`        | `TouchXEnv`        | The agent must be directly adjecent to the correct object.                                                                                      |
+| ![MoveXToCenter](./figures/movextocenter.gif) | `Gridroboman-MoveXToCenter-v0` | `MoveXToCenterEnv` | The agent must place the correct object in the center (3x3 area in the center of the grid).                                                     |
+| ![MoveXToCorner](./figures/movextocorner.gif) | `Gridroboman-MoveXToCorner-v0` | `MoveXToCornerEnv` | The agent must place the correct object in any of the corners (any of the 4 2x2 in the corners).                                                |
+| ![TouchXWithY](./figures/touchxwithy.gif)     | `Gridroboman-TouchXWithY-v0`   | `TouchXWithYEnv`   | The agent must be directly adjacent to object X while holding object Y.                                                                         |
+| ![MoveXCloseToY](./figures/movexclosetoy.gif) | `Gridroboman-MoveXCloseToY-v0` | `MoveXCloseToYEnv` | The agent must place objects X and Y next to each other, such that the distance between both objects in the X and Y directions do not exceed 1. |
+| ![MoveXFarFromY](./figures/movexfarfromy.gif) | `Gridroboman-MoveXFarFromY-v0` | `MoveXFarFromYEnv` | The agent must place objects X and Y away from each other, such that the Manhattan distance between the objects are greater than 9.             |
+| ![StackXOnY](./figures/stackxony.gif)         | `Gridroboman-StackXOnY-v0`     | `StackXOnYEnv`     | The agent must place object X on top of object Y.                                                                                               |
 
 ### Citation
 

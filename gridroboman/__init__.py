@@ -1,4 +1,14 @@
 from gymnasium import register
+from gridroboman.envs import (
+    LiftXEnv,
+    TouchXEnv,
+    MoveXToCenterEnv,
+    MoveXToCornerEnv,
+    TouchXWithYEnv,
+    MoveXCloseToYEnv,
+    MoveXFarFromYEnv,
+    StackXOnYEnv,
+)
 
 for x in ["Red", "Green", "Blue"]:
     register(
