@@ -270,7 +270,7 @@ class TouchXEnv(BaseGridrobomanEnv):
 
 class MoveXToCenterEnv(BaseGridrobomanEnv):
     """
-    The agent must place the correct object in the center.
+    The agent must place the correct object in the center (3x3 area in the center of the grid).
     """
 
     def _goal_fn(self) -> bool:
@@ -280,7 +280,7 @@ class MoveXToCenterEnv(BaseGridrobomanEnv):
 
 class MoveXToCornerEnv(BaseGridrobomanEnv):
     """
-    The agent must place the correct object in any of the corners.
+    The agent must place the correct object in any of the corners (any of the 4 2x2 in the corners).
     """
 
     def _goal_fn(self) -> bool:
