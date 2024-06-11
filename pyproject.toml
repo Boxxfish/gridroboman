@@ -9,6 +9,7 @@ packages = [{include = "gridroboman"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 gymnasium = "^0.29.1"
+pygame = "^2.5.2"
 
 
 [tool.poetry.group.dev.dependencies]

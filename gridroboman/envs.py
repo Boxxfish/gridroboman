@@ -4,6 +4,7 @@ import gymnasium as gym
 import random
 
 import numpy as np
+import pygame
 
 GRID_SIZE = 7
 MAX_TIME = 50
@@ -15,6 +16,7 @@ CORNERS = [
     for sx in [0, 5]
     for sy in [0, 5]
 ]
+WINDOW_SIZE = 600
 
 
 @dataclass
@@ -29,6 +31,10 @@ class BaseGridrobomanEnv(gym.Env):
     """
     Base class for Gridroboman tasks.
     """
+    metadata = {
+        "render_modes": ["human"],
+        "render_fps": 10,
+    }
 
     def __init__(
         self,
@@ -36,6 +42,8 @@ class BaseGridrobomanEnv(gym.Env):
         y_obj: Union[int, str] = -1,
         render_mode: Optional[str] = None,
     ):
+        self.metadata["render_modes"] = ["human"]
+        self.metadata["render_fps"] = 10
         color_map = {
             "red": 0,
             "green": 1,
@@ -52,12 +60,20 @@ class BaseGridrobomanEnv(gym.Env):
         assert self.x_obj in [0, 1, 2], "X object is not in [0, 1, 2]"
         assert self.x_obj != self.y_obj, "X object and Y object must be different"
 
+        self.observation_space = gym.spaces.Box(-1, 6, [11])
         self.action_space = gym.spaces.Discrete(7)
         self.render_mode = render_mode
         self.agent_pos: Tuple[int, int] = (0, 0)
         self.objs = [ObjData(0, 0, None, None) for _ in range(3)]
         self.lifted_obj_idx: Optional[int] = None
         self.timer = 0
+
+        self.screen = None
+        self.clock = None
+        if self.render_mode == "human":
+            pygame.init()
+            self.screen = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE))
+            self.clock = pygame.time.Clock()
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict[str, Any]]:
         assert self.action_space.contains(action)
@@ -80,7 +96,7 @@ class BaseGridrobomanEnv(gym.Env):
 
         # Pick up
         if action == 5:
-            if self._top_obj_idx(self.agent_pos) is not None:
+            if self._top_obj_idx(self.agent_pos) is not None and self.lifted_obj_idx is None:
                 self._pick_up_obj(self.agent_pos)
         # Drop
         if action == 6:
@@ -100,17 +116,19 @@ class BaseGridrobomanEnv(gym.Env):
         self.timer += 1
         trunc = self.timer == MAX_TIME
 
-        return self._gen_obs(), reward, False, trunc, self._gen_info()
+        return self._gen_obs(), reward, done, trunc, self._gen_info()
 
     def reset(
         self, seed: Optional[int] = None, options: Optional[dict[str, Any]] = None
     ) -> tuple[np.ndarray, dict[str, Any]]:
         random.seed(seed)
+        self.lifted_obj_idx = None
         self.agent_pos = (
             random.randrange(0, GRID_SIZE),
             random.randrange(0, GRID_SIZE),
         )
         used_pos = {self.agent_pos}
+        self.timer = 0
         for i in range(3):
             pos = (random.randrange(0, GRID_SIZE), random.randrange(0, GRID_SIZE))
             while pos in used_pos:
@@ -123,7 +141,7 @@ class BaseGridrobomanEnv(gym.Env):
         return self._gen_obs(), self._gen_info()
 
     def _gen_obs(self) -> np.ndarray:
-        obs = np.zeros([11], dtype=float)
+        obs = np.zeros([11], dtype=np.float32)
         (obs[0], obs[1]) = self.agent_pos
         for i in range(3):
             obj = self.objs[i]
@@ -198,16 +216,36 @@ class BaseGridrobomanEnv(gym.Env):
         raise NotImplementedError("This method must be overrided.")
 
     def render(self):
-        for y in range(GRID_SIZE):
-            for x in range(GRID_SIZE):
-                symbol = " "
-                if self.agent_pos == (x, y):
-                    symbol = "*"
-                for i, color in enumerate(["R", "G", "B"]):
-                    if i == self._top_obj_idx((x, y)):
-                        symbol = color
-                print(f"[{symbol}]", end="")
-            print("")
+        if self.render_mode == "human":
+            bg_color = (122, 122, 122)
+            self.screen.fill(bg_color)
+            cell_size = WINDOW_SIZE / GRID_SIZE
+            for y in range(GRID_SIZE):
+                for x in range(GRID_SIZE):
+                    cell_color = bg_color
+                    if self.agent_pos == (x, y):
+                        cell_color = (0, 0, 0)
+                    for i, color in enumerate([(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
+                        if i == self._top_obj_idx((x, y)) and self.objs[i].obj_above is None:
+                            cell_color = color
+                    pygame.draw.rect(
+                        self.screen,
+                        cell_color,
+                        (
+                            x * cell_size,
+                            y * cell_size,
+                            (x + 1) * cell_size,
+                            (y + 1) * cell_size,
+                        ),
+                    )
+            pygame.display.flip()
+            self.clock.tick(10)
+
+    def close(self):
+        if self.screen is not None:
+            pygame.quit()
+            self.screen = None
+            self.clock = None
 
 
 class LiftXEnv(BaseGridrobomanEnv):
