@@ -20,11 +20,7 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
           poetry install
       - name: Run mypy
-        uses: sasanquaneuf/mypy-github-action@releases/v1
-        with:
-          checkName: 'mypy'   # NOTE: this needs to be the same as the job name
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mypy .
   black:
     runs-on: ubuntu-latest
     steps:
