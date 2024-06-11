@@ -161,7 +161,7 @@ class BaseGridrobomanEnv(gym.Env):
         mask[2] = self.agent_pos[1] == GRID_SIZE - 1
         mask[3] = self.agent_pos[0] == 0
         mask[4] = self.agent_pos[0] == GRID_SIZE - 1
-        mask[5] = self._top_obj_idx(self.agent_pos) is None
+        mask[5] = self._top_obj_idx(self.agent_pos) is None or self.lifted_obj_idx is not None
         mask[6] = self.lifted_obj_idx is None
         return {"action_mask": mask}
 
