@@ -31,6 +31,7 @@ class BaseGridrobomanEnv(gym.Env):
     """
     Base class for Gridroboman tasks.
     """
+
     metadata = {
         "render_modes": ["human"],
         "render_fps": 10,
@@ -96,7 +97,10 @@ class BaseGridrobomanEnv(gym.Env):
 
         # Pick up
         if action == 5:
-            if self._top_obj_idx(self.agent_pos) is not None and self.lifted_obj_idx is None:
+            if (
+                self._top_obj_idx(self.agent_pos) is not None
+                and self.lifted_obj_idx is None
+            ):
                 self._pick_up_obj(self.agent_pos)
         # Drop
         if action == 6:
@@ -161,7 +165,9 @@ class BaseGridrobomanEnv(gym.Env):
         mask[2] = self.agent_pos[1] == GRID_SIZE - 1
         mask[3] = self.agent_pos[0] == 0
         mask[4] = self.agent_pos[0] == GRID_SIZE - 1
-        mask[5] = self._top_obj_idx(self.agent_pos) is None or self.lifted_obj_idx is not None
+        mask[5] = (
+            self._top_obj_idx(self.agent_pos) is None or self.lifted_obj_idx is not None
+        )
         mask[6] = self.lifted_obj_idx is None
         return {"action_mask": mask}
 
@@ -226,7 +232,10 @@ class BaseGridrobomanEnv(gym.Env):
                     if self.agent_pos == (x, y):
                         cell_color = (0, 0, 0)
                     for i, color in enumerate([(255, 0, 0), (0, 255, 0), (0, 0, 255)]):
-                        if i == self._top_obj_idx((x, y)) and self.objs[i].obj_above is None:
+                        if (
+                            i == self._top_obj_idx((x, y))
+                            and self.objs[i].obj_above is None
+                        ):
                             cell_color = color
                     pygame.draw.rect(
                         self.screen,
